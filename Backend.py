@@ -5,6 +5,7 @@ x="Hello World"
 
 @app.route('/')
 def home():
+    print("Hello World")
     return "This is home page "
 
 @app.route('/api/tests', methods=['GET','POST'])
@@ -33,7 +34,7 @@ def tests():
         )
         return response
     if(request.method == 'POST'):
-        print("Success!!")
+        print("Success11111!!")
         param = request.json
         print(param)
         return Response(response='success', status=200, mimetype="application/json") #return json string
