@@ -5,6 +5,7 @@ from pythainlp.tokenize import word_tokenize
 import pythainlp.corpus as st
 import numpy as np
 import pymongo
+from bson.objectid import ObjectId
 
 client = pymongo.MongoClient("mongodb+srv://tum123456:ttt123456@cluster0.cfjjb.mongodb.net/<dbname>?retryWrites=true&w=majority")
 db = client.test
@@ -51,25 +52,80 @@ def clear_space(s):
 data['Title'] = data['Title'].apply(lower)
 all_work = [clear_space(i) for i in data['Title'].tolist()]
 
+
 @app.route('/')
 def home():
     print("Hello World")
     return "This is home page "
 
-@app.route('/login_employee', methods=['GET','POST'])
+@app.route('/login_employee')
 def login_employee():
     if(request.method == 'GET'):
-        print(123)
-        param1 = request.args.get('name')
-        param2 = request.args.get('pass')
-        print(param1+' '+param2)
-        response = {
-             'response' : 'locked in',
-             'mimetype' : 'application/json'
-                
-        }
+        try:
+            param1 = request.args.get('name')
+            param2 = request.args.get('pass')
+            mycol = mydb["Employee_Account"]
+            result = mycol.find({ "Email":param1})
+            result = list(result)
+            if(len(result) != 0):
+                if(param2 == result[0]['Password']):
+                    response = {
+                         'response' : 'Pass',
+                         'mimetype' : 'application/json',
+                         'data': json.dumps(result[0], default=str)
+                    }
+                else:
+                    response = {
+                         'response' : 'Not Pass',
+                         'mimetype' : 'application/json'     
+                    }
+                    
+            else:
+                response = {
+                     'response' : 'Not Pass',
+                     'mimetype' : 'application/json'     
+                }
+        except :
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
         return response
-    
+
+@app.route('/login_employer')
+def login_employer():
+    if(request.method == 'GET'):
+        try:
+            param1 = request.args.get('name')
+            param2 = request.args.get('pass')
+            mycol = mydb["Employer_Account"]
+            result = mycol.find({ "Email":param1})
+            result = list(result)
+            if(len(result) != 0):
+                if(param2 == result[0]['Password']):
+                    response = {
+                         'response' : 'Pass',
+                         'mimetype' : 'application/json',
+                         'data': json.dumps(result[0], default=str)
+                    }
+                else:
+                    response = {
+                         'response' : 'Not Pass',
+                         'mimetype' : 'application/json'     
+                    }
+                    
+            else:
+                response = {
+                     'response' : 'Not Pass',
+                     'mimetype' : 'application/json'     
+                }
+        except :
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
+
 @app.route('/search_job', methods=['GET','POST'])
 def search_job():
     if(request.method == 'GET'):
@@ -138,8 +194,48 @@ def Employee_Register():
     if(request.method == 'POST'):
         print(request.json)
         try:
+            data = request.json
             mycol = mydb["Employee_Account"]
-            mycol.insert_one(request.json)
+            result = mycol.find({ "Email":data["Email"]})
+            result = list(result)
+            result1 = mycol.find({"ID":data["ID"]})
+            result1 = list(result1)
+            if(len(result) == 0 and len(result1) == 0):
+                mycol.insert_one(request.json)
+                response = {
+                     'response' : 'Pass',
+                     'mimetype' : 'application/json'     
+                }
+            else:
+                response = {
+                     'response' : 'Not Pass',
+                     'mimetype' : 'application/json'     
+                }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
+
+@app.route('/Employee_StatusEdit', methods=['GET','POST'])
+def Employee_StatusEdit():
+    if(request.method == 'POST'):
+        print(request.json)
+        try:
+            data = request.json
+            mycol = mydb["Employee_Account"]
+            find = { '_id': data['email'] }
+            newvalues = { "$set": { 'age': data['age'] } } 
+            mycol.update_one(find, newvalues)
+            newvalues = { "$set": { 'sex': data['sex'] } } 
+            mycol.update_one(find, newvalues)
+            newvalues = { "$set": { 'nation': data['nation'] } } 
+            mycol.update_one(find, newvalues)
+            newvalues = { "$set": { 'religion': data['religion'] } } 
+            mycol.update_one(find, newvalues)
+            newvalues = { "$set": { 'degree': data['degree'] } } 
+            mycol.update_one(find, newvalues)
             response = {
                  'response' : 'Pass',
                  'mimetype' : 'application/json'     
@@ -150,32 +246,98 @@ def Employee_Register():
                  'mimetype' : 'application/json'     
             }
         return response
-@app.route('/api/param', methods=['GET','POST'])
-def param():
+
+@app.route('/Employee_CreateAnnoucment', methods=['GET','POST'])
+def Employee_CreateAnnoucment():
+    if(request.method == 'POST'):
+        print(request.json)
+        try:
+            data = request.json
+            mycol = mydb["Employee_Annoucment"]
+            mycol.insert_one(data)
+            response = {
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
+
+@app.route('/Employee_getAnnoucment', methods=['GET','POST'])
+def Employee_getAnnoucment():
     if(request.method == 'GET'):
-        param1 = request.args.get('name')
-        param2 = request.args.get('pass')
-        data = {'user':param1,'pass':param2}
-        print(param1+' '+param2)
-        response = {
-             'response' : 'locked in',
-             'mimetype' : 'application/json'
-                
-        }
-   
+        param = request.args.get('want')
+        print(param)
+        try:
+            mycol = mydb["Employee_Annoucment"]
+            result = mycol.find({ "owner":param})
+            result = list(result)
+            print(result)
+            response = {
+                 'data': json.dumps(result, default=str),
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
+
+@app.route('/Employee_deleteAnnoucment', methods=['GET','POST'])
+def Employee_deleteAnnoucment():
+    if(request.method == 'GET'):
+        param = request.args.get('want')
+        print(param)
+        try:
+            mycol = mydb["Employee_Annoucment"]
+            myquery = { "_id": ObjectId(param) }
+            mycol.delete_one(myquery)
+            response = {
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
         return response
     
+    
+    
+    
+@app.route('/Employer_Register', methods=['GET','POST'])
+def Employer_Register():
     if(request.method == 'POST'):
-        param1 = request.args.get('name')
-        param2 = request.args.get('pass')
-        data = {'user':param1,'pass':param2}
-        print(param1+' '+param2)
-        response = app.response_class(
-                #response=update('accounts',data),
-                mimetype='application/json'
-        )
+        try:
+            data = request.json
+            mycol = mydb["Employer_Account"]
+            result = mycol.find({ "Email":data["Email"]})
+            result = list(result)
+            result1 = mycol.find({"ID":data["ID"]})
+            result1 = list(result1)
+            if(len(result) == 0 and len(result1) == 0):
+                mycol.insert_one(request.json)
+                response = {
+                     'response' : 'Pass',
+                     'mimetype' : 'application/json'     
+                }
+            else:
+                response = {
+                     'response' : 'Not Pass',
+                     'mimetype' : 'application/json'     
+                }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
         return response
- 
 
 if __name__ == '__main__':
     app.run(debug=True)
