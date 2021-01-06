@@ -1,0 +1,10 @@
+login_employee : emyee login
+login_employer : emyer login
+search_job : ค้นหางาน
+Employee_Register : 
+Employee_StatusEdit : 
+Employee_CreateAnnoucment : 
+Employee_getAnnoucment : 
+Employee_deleteAnnoucment : 
+Employer_Register : 
+

@@ -218,6 +218,34 @@ def Employee_Register():
             }
         return response
 
+@app.route('/Employer_Register', methods=['GET','POST'])
+def Employer_Register():
+    if(request.method == 'POST'):
+        try:
+            data = request.json
+            mycol = mydb["Employer_Account"]
+            result = mycol.find({ "Email":data["Email"]})
+            result = list(result)
+            result1 = mycol.find({"ID":data["ID"]})
+            result1 = list(result1)
+            if(len(result) == 0 and len(result1) == 0):
+                mycol.insert_one(request.json)
+                response = {
+                     'response' : 'Pass',
+                     'mimetype' : 'application/json'     
+                }
+            else:
+                response = {
+                     'response' : 'Not Pass',
+                     'mimetype' : 'application/json'     
+                }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
+
 @app.route('/Employee_StatusEdit', methods=['GET','POST'])
 def Employee_StatusEdit():
     if(request.method == 'POST'):
@@ -247,8 +275,8 @@ def Employee_StatusEdit():
             }
         return response
 
-@app.route('/Employee_CreateAnnoucment', methods=['GET','POST'])
-def Employee_CreateAnnoucment():
+@app.route('/Employee_Annoucment', methods=['GET','POST','DELETE'])
+def Employee_Annoucment():
     if(request.method == 'POST'):
         print(request.json)
         try:
@@ -265,32 +293,36 @@ def Employee_CreateAnnoucment():
                  'mimetype' : 'application/json'     
             }
         return response
-
-@app.route('/Employee_getAnnoucment', methods=['GET','POST'])
-def Employee_getAnnoucment():
-    if(request.method == 'GET'):
+    elif(request.method == 'GET'):
         param = request.args.get('want')
         print(param)
         try:
             mycol = mydb["Employee_Annoucment"]
-            result = mycol.find({ "owner":param})
-            result = list(result)
-            print(result)
-            response = {
-                 'data': json.dumps(result, default=str),
-                 'response' : 'Pass',
-                 'mimetype' : 'application/json'     
-            }
+            if(param == 'all'):
+                result = mycol.find({})
+                result = list(result)
+                print(result)
+                response = {
+                     'data': json.dumps(result, default=str),
+                     'response' : 'Pass',
+                     'mimetype' : 'application/json'     
+                }
+            else:
+                result = mycol.find({ "owner":param})
+                result = list(result)
+                print(result)
+                response = {
+                     'data': json.dumps(result, default=str),
+                     'response' : 'Pass',
+                     'mimetype' : 'application/json'     
+                }
         except:
             response = {
                  'response' : 'Cannot',
                  'mimetype' : 'application/json'     
             }
         return response
-
-@app.route('/Employee_deleteAnnoucment', methods=['GET','POST'])
-def Employee_deleteAnnoucment():
-    if(request.method == 'GET'):
+    elif(request.method == 'DELETE'):
         param = request.args.get('want')
         print(param)
         try:
@@ -308,30 +340,40 @@ def Employee_deleteAnnoucment():
             }
         return response
     
+@app.route('/Employer_Annoucment', methods=['GET','POST'])
+def Employer_Annoucment():
+    if(request.method == 'GET'):
+        param = request.args.get('want')
+        print(param)
+        try:
+            mycol = mydb["Employer_Annoucment"]
+            result = mycol.find({ "owner":param})
+            result = list(result)
+            print(result)
+            response = {
+                 'data': json.dumps(result, default=str),
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
     
-    
-    
-@app.route('/Employer_Register', methods=['GET','POST'])
-def Employer_Register():
     if(request.method == 'POST'):
+        print(request.json)
         try:
             data = request.json
-            mycol = mydb["Employer_Account"]
-            result = mycol.find({ "Email":data["Email"]})
-            result = list(result)
-            result1 = mycol.find({"ID":data["ID"]})
-            result1 = list(result1)
-            if(len(result) == 0 and len(result1) == 0):
-                mycol.insert_one(request.json)
-                response = {
-                     'response' : 'Pass',
-                     'mimetype' : 'application/json'     
-                }
-            else:
-                response = {
-                     'response' : 'Not Pass',
-                     'mimetype' : 'application/json'     
-                }
+            print(data)
+            """
+            mycol = mydb["Employer_Annoucment"]
+            mycol.insert_one(data)"""
+            response = {
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
         except:
             response = {
                  'response' : 'Cannot',
@@ -339,6 +381,25 @@ def Employer_Register():
             }
         return response
 
+@app.route('/getAllEmployee',methods=['GET','POST'])
+def getAllEmployee():
+    if(request.method == 'GET'):
+        try:
+            mycol = mydb["Employee_Account"]
+            result = mycol.find({},{ "Password": 0, "Question": 0, "Answer": 0 })
+            result = list(result)
+            print(result)
+            response = {
+                 'data': json.dumps(result, default=str),
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
 if __name__ == '__main__':
     app.run(debug=True)
     
