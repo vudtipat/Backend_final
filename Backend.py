@@ -340,18 +340,46 @@ def Employee_Annoucment():
             }
         return response
     
-@app.route('/Employer_Annoucment', methods=['GET','POST'])
+@app.route('/Employer_Annoucment', methods=['GET','POST','DELETE'])
 def Employer_Annoucment():
     if(request.method == 'GET'):
         param = request.args.get('want')
         print(param)
         try:
             mycol = mydb["Employer_Annoucment"]
-            result = mycol.find({ "owner":param})
-            result = list(result)
-            print(result)
+            if(param == 'all'):
+                result = mycol.find({})
+                result = list(result)
+                print(result)
+                response = {
+                     'data': json.dumps(result, default=str),
+                     'response' : 'Pass',
+                     'mimetype' : 'application/json'     
+                }
+            else:
+                result = mycol.find({ "owner":param})
+                result = list(result)
+                print(result)
+                response = {
+                     'data': json.dumps(result, default=str),
+                     'response' : 'Pass',
+                     'mimetype' : 'application/json'     
+                }
+        except:
             response = {
-                 'data': json.dumps(result, default=str),
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
+    
+    elif(request.method == 'POST'):
+        print(request.json)
+        try:
+            data = request.json
+            print(data)
+            mycol = mydb["Employer_Annoucment"]
+            mycol.insert_one(data)
+            response = {
                  'response' : 'Pass',
                  'mimetype' : 'application/json'     
             }
@@ -361,15 +389,13 @@ def Employer_Annoucment():
                  'mimetype' : 'application/json'     
             }
         return response
-    
-    if(request.method == 'POST'):
-        print(request.json)
+    elif(request.method == 'DELETE'):
+        param = request.args.get('want')
+        print(param)
         try:
-            data = request.json
-            print(data)
-            """
             mycol = mydb["Employer_Annoucment"]
-            mycol.insert_one(data)"""
+            myquery = { "_id": ObjectId(param) }
+            mycol.delete_one(myquery)
             response = {
                  'response' : 'Pass',
                  'mimetype' : 'application/json'     
@@ -381,25 +407,6 @@ def Employer_Annoucment():
             }
         return response
 
-@app.route('/getAllEmployee',methods=['GET','POST'])
-def getAllEmployee():
-    if(request.method == 'GET'):
-        try:
-            mycol = mydb["Employee_Account"]
-            result = mycol.find({},{ "Password": 0, "Question": 0, "Answer": 0 })
-            result = list(result)
-            print(result)
-            response = {
-                 'data': json.dumps(result, default=str),
-                 'response' : 'Pass',
-                 'mimetype' : 'application/json'     
-            }
-        except:
-            response = {
-                 'response' : 'Cannot',
-                 'mimetype' : 'application/json'     
-            }
-        return response
 if __name__ == '__main__':
     app.run(debug=True)
     
