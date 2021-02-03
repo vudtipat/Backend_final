@@ -1,4 +1,4 @@
-from flask import Flask,request,json
+﻿from flask import Flask,request,json
 import pandas as pd 
 from gensim.models import Word2Vec
 from pythainlp.tokenize import word_tokenize
@@ -24,16 +24,8 @@ def concerned_sentence(search,allsentence):
     arr = []
     for i in search:
         for j in allsentence:
-            if(i.lower() in j['position']):
-                arr.append(j['position'])
-    return arr
-
-def concerned_sentence1(search,allsentence):
-    arr = []
-    for i in search:
-        for j in allsentence:
-            if(i.lower() in j['job']):
-                arr.append(j['job'])
+            if(i.lower() in j):
+                arr.append(j)
     return arr
 
 def clear_space(s):
@@ -44,7 +36,7 @@ def clear_space(s):
         if(i != '/'):
             if(i != ' '):
                 ss+=i
-    b = word_tokenize(s)
+    b = word_tokenize(ss)
     bb = []
     for i in b:
         if(i ==  ' '):
@@ -141,62 +133,53 @@ def search_job():
         print(param)
         search_word = param
         search = clear_space(search_word)
-        mycol = mydb["Employer_Annoucment"]
-        result = mycol.find({})
-        result = list(result)
-        select_sentence = concerned_sentence(search,result)
-        #print(select_sentence)
-        #print(search)
+        select_sentence = concerned_sentence(search,all_work)
         if(len(select_sentence) > 0):
-            x = [clear_space(ss) for ss in select_sentence]
-            print(x)
-            model = Word2Vec(x, min_count=1,size = 500)
-            print(model)
-            print(model.wv.vocab)
+            model = Word2Vec(select_sentence, min_count=1,size = 500)
             a = []
-            a += search
             try:
                 for t in search:
-                    text = ''
-                    if(t in model.wv.vocab):
-                        text = t
-                    else:
-                        for ii in model.wv.vocab:
-                            if(t in ii):
-                                text = ii
-                                break
-                    aa=model.most_similar(text)
+                    aa=model.most_similar(t)
                     list_of_word = [i[0] for i in aa]
                     a += list_of_word
-                        
+                    
                     a = np.array(a) 
                     a = np.unique(a)
-                        
+                    
                     print("===== RESULT =====")
                     print(a)
                     print("===== RESULT =====")
-                    lst = []
-                    id_s = []
+                    
+                    result = []
                     for i in a:
-                        for j in result:
-                            if(i in j['position']):
-                                if(j['_id'] not in id_s):
-                                    lst.append(j)
-                                    id_s.append(j['_id'])
+                        for j in range(len(all_work)):
+                            if(i in all_work[j]):
+                                result.append(j)
+                                
+                    result = np.array(result)
+                    result = np.unique(result)
+                    print("===== SEARCH RESULT =====")
+                    print(result)
+                    lst = []
+                    for z in result:
+                        da = [
+                                data.iloc[z]['Title'],
+                                data.iloc[z]['Company'],
+                                data.iloc[z]['Location'],
+                                data.iloc[z]['Property']
+                        ]
+                        lst.append(da)
+                        #print(data.iloc[z])
+                    #lst = json.dumps(lst ,ensure_ascii=False)
                     print(lst)
-                    print("result = "+str(len(lst)))
-                    print("all = "+str(len(result)))
-                    lst =json.dumps(lst, default=str)
                     response = {
-                        'response' : "find",
-                        'data':lst,
-                        'mimetype' : 'application/json'
+                         'response' : lst,
+                         'mimetype' : 'application/json'
                     }
+                    print("===== SEARCH RESULT =====")
             except:
-                response = {
-                 'response' : 'ไม่สามารถทำได้',
-                 'mimetype' : 'application/json'
-                }
+                b = select_sentence
+                
         else:
             response = {
              'response' : 'ไม่มีงานอยุ่ในระบบ',
@@ -205,76 +188,6 @@ def search_job():
         
         return response
 
-@app.route('/search_employee', methods=['GET','POST'])
-def search_employee():
-    if(request.method == 'GET'):
-        param = request.args.get('search')
-        print(param)
-        search_word = param
-        search = clear_space(search_word)
-        mycol = mydb["Employee_Annoucment"]
-        result = mycol.find({})
-        result = list(result)
-        select_sentence = concerned_sentence1(search,result)
-        #print(select_sentence)
-        #print(search)
-        if(len(select_sentence) > 0):
-            x = [clear_space(ss) for ss in select_sentence]
-            print(x)
-            model = Word2Vec(x, min_count=1,size = 500)
-            print(model)
-            print(model.wv.vocab)
-            a = []
-            a += search
-            try:
-                for t in search:
-                    text = ''
-                    if(t in model.wv.vocab):
-                        text = t
-                    else:
-                        for ii in model.wv.vocab:
-                            if(t in ii):
-                                text = ii
-                                break
-                    aa=model.most_similar(text)
-                    list_of_word = [i[0] for i in aa]
-                    a += list_of_word
-                        
-                    a = np.array(a) 
-                    a = np.unique(a)
-                        
-                    print("===== RESULT =====")
-                    print(a)
-                    print("===== RESULT =====")
-                    lst = []
-                    id_s = []
-                    for i in a:
-                        for j in result:
-                            if(i in j['job']):
-                                if(j['_id'] not in id_s):
-                                    lst.append(j)
-                                    id_s.append(j['_id'])
-                    print(lst)
-                    print("result = "+str(len(lst)))
-                    print("all = "+str(len(result)))
-                    lst =json.dumps(lst, default=str)
-                    response = {
-                        'response' : "find",
-                        'data':lst,
-                        'mimetype' : 'application/json'
-                    }
-            except:
-                response = {
-                 'response' : 'ไม่สามารถทำได้',
-                 'mimetype' : 'application/json'
-                }
-        else:
-            response = {
-             'response' : 'ไม่มีงานอยุ่ในระบบ',
-             'mimetype' : 'application/json'
-            }
-        
-        return response
 
 @app.route('/Employee_Register', methods=['GET','POST'])
 def Employee_Register():
