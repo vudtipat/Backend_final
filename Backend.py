@@ -6,6 +6,7 @@ import pythainlp.corpus as st
 import numpy as np
 import pymongo
 from bson.objectid import ObjectId
+from datetime import datetime
 
 client = pymongo.MongoClient("mongodb+srv://tum123456:ttt123456@cluster0.cfjjb.mongodb.net/<dbname>?retryWrites=true&w=majority")
 db = client.test
@@ -494,6 +495,65 @@ def Employer_Annoucment():
             }
         return response
 
+@app.route('/chat', methods=['GET','POST','DELETE'])
+def chat():
+    if(request.method == 'GET'):
+        try:
+            param = request.args.get('want')
+            print(param)
+            myquery = { "id": param }
+            mycol = mydb["chat"]
+            mydoc = mycol.find(myquery)
+            mydoc = list(mydoc)
+            print(mydoc)
+            mydoc.sort(reverse=True,key=lambda x:x['date'])
+            print(mydoc)
+            response = {
+                 'data': json.dumps(mydoc, default=str),
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
+    
+    elif(request.method == 'POST'):
+        print(request.json)
+        try:
+            data = request.json
+            now = datetime.now()
+            if(data["u1"] < data["u2"]):
+                doc_id = data["u2"]+":"+data["u1"]
+            else:
+                doc_id = data["u1"]+":"+data["u2"]
+            print(doc_id)
+            print(datetime.fromtimestamp(int(datetime.timestamp(now))))
+            datapackage = {
+                'id':doc_id,
+                'text': data["text"],
+                'own': data["own"],
+                'date': datetime.fromtimestamp(int(datetime.timestamp(now))),
+                'type': data["type"]
+            }
+            print(datapackage)
+            #print(datetime.fromtimestamp(datapackage['date']))
+            mycol = mydb["chat"]
+            mycol.insert_one(datapackage)
+            response = {
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
+ 
+    
 if __name__ == '__main__':
     app.run(debug=True)
     
