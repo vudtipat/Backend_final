@@ -1,0 +1,84 @@
+@app.route('/chat', methods=['GET','POST','DELETE'])
+def chat():
+    if(request.method == 'GET'):
+        try:
+            param = request.args.get('want')
+            print(param)
+            myquery = { "_id": param }
+            mycol = mydb["chat"]
+            mydoc = mycol.find(myquery,{'data':1,'_id':0})
+            mydoc = list(mydoc)
+            mydoc = mydoc[0]['data']
+            mydoc.sort(reverse=True,key=lambda x:x['date'])
+            print(mydoc)
+            response = {
+                 'data': json.dumps(mydoc, default=str),
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
+    
+    elif(request.method == 'POST'):
+        print(request.json)
+        try:
+            data = request.json
+            now = datetime.now()
+            mycol = mydb["chat"]
+            if(data["u1"] < data["u2"]):
+                doc_id = data["u2"]+":"+data["u1"]
+            else:
+                doc_id = data["u1"]+":"+data["u2"]
+            re = mycol.find({'_id':doc_id})
+            if(len(list(re)) == 0):
+                mycol.insert_one({'_id':doc_id,
+                                  'data':[]
+                                }) 
+            datapackage = {
+                'text': data["text"],
+                'own': data["own"],
+                'date': datetime.fromtimestamp(int(datetime.timestamp(now))),
+                'type': data["type"]
+            }
+            mycol.update(
+               { '_id': doc_id },
+               { '$push': {'data': datapackage} }
+            )
+            response = {
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
+            """
+            data = request.json
+            now = datetime.now()
+            datapackage = {
+                'text': data["text"],
+                'own': data["own"],
+                'date': datetime.fromtimestamp(int(datetime.timestamp(now))),
+                'type': data["type"]
+            }
+            print(datapackage)
+            #print(datetime.fromtimestamp(datapackage['date']))
+            mycol = mydb["chat"]
+            result1 = mycol.find({"_id":data["u1"]})
+            if(len(result1) == 0):
+                data = {
+                    '_id': data['u1'],
+                    'data' : []
+                }
+            mycol.insert_one(datapackage)
+            response = {
+                 'response' : 'Pass',
+                 'mimetype' : 'application/json'     
+            }
+            """
+        except:
+            response = {
+                 'response' : 'Cannot',
+                 'mimetype' : 'application/json'     
+            }
+        return response
